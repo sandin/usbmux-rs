@@ -126,6 +126,7 @@ impl UsbmuxdClient {
     }
 
     pub fn start_listen(&mut self) {
+        /*
         let (sender, receiver) = mpsc::channel();
         self.sender = Some(sender);
 
@@ -146,6 +147,7 @@ impl UsbmuxdClient {
             }
             println!("thread exit, tid={:?}!", thread::current().id());
         }));
+        */
     }
 
     pub fn stop_listen(&mut self) {
@@ -170,11 +172,13 @@ impl UsbmuxdClient {
     /// Subscribe a callback function to be called upon device add/remove events.
     pub fn events_unsubscribe(&mut self, listener: Box<dyn UsbmuxdEventListener>) 
     {
+        /*
         let listeners : &Vec<Box<dyn UsbmuxdEventListener>> = &*self.listeners.lock().unwrap();
         let index = listeners.iter().position(|item| { 
             return **item == listener;
         }).unwrap();
         listeners.remove(index);
+        */
     }
 }
 
@@ -189,8 +193,10 @@ mod tests {
 
     #[test]
     fn get_devices_list() -> result::Result<(), Box<Error>> {
+        println!("get_devices_list");
         let mut client = create_client()?;
 
+        /*
         let callback = || {
             println!("on event listener callback");
         };
@@ -203,6 +209,7 @@ mod tests {
         thread::sleep(Duration::from_secs(3));
 
         client.stop_listen();
+        */
 
         //let listener = create_listener();
         //client.events_subscribe(&listener);

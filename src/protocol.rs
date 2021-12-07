@@ -4,7 +4,7 @@
 //#[macro_use]
 use serde::{Serialize, Deserialize};
 
-#[cfg(any(target_os = "linux", target_os = "mac"))]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 pub const USBMUXD_SOCKET_NAME: &str = "/var/run/usbmuxd";
 #[cfg(target_os = "windows")]
 pub const USBMUXD_SOCKET_NAME: &str = "127.0.0.1:27015";
