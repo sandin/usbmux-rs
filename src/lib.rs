@@ -9,6 +9,7 @@ mod protocol;
 
 use std::io;
 use std::result;
+use std::cmp::PartialEq;
 //use std::io::prelude::*;
 use std::io::Cursor;
 use std::io::{BufReader, BufWriter, Read, Write};
@@ -39,7 +40,7 @@ pub trait UsbmuxdEventListener {
 
 pub struct UsbmuxdClient
 {
-    listeners: Arc<Mutex<Vec<Box<dyn UsbmuxdEventListener>>>>,
+    listeners: Arc<Mutex<Vec<Box<dyn UsbmuxdEventListener + Send + 'static>>>>,
     worker: Option<thread::JoinHandle<()>>,
     sender: Option<mpsc::Sender<()>>,
 }
@@ -126,11 +127,10 @@ impl UsbmuxdClient {
     }
 
     pub fn start_listen(&mut self) {
-        /*
         let (sender, receiver) = mpsc::channel();
         self.sender = Some(sender);
 
-        let listeners = self.listeners.clone();
+        let listeners = Arc::clone(&self.listeners);
         self.worker = Some(thread::spawn(move || {
             println!("thread start, tid={:?}!", thread::current().id());
             loop {
@@ -139,15 +139,15 @@ impl UsbmuxdClient {
                     break;
                 }
 
-                for listener in &*listeners.lock().unwrap() {
+                let mut listeners = listeners.lock().unwrap();
+                for listener in listeners.iter_mut() {
                     listener.on_event(&String::from(""));
                 }
 
-                thread::sleep_ms(100);
+                thread::sleep_ms(100); // TODO: use tokio select
             }
             println!("thread exit, tid={:?}!", thread::current().id());
         }));
-        */
     }
 
     pub fn stop_listen(&mut self) {
@@ -160,7 +160,7 @@ impl UsbmuxdClient {
     }
 
     /// Subscribe a callback function to be called upon device add/remove events.
-    pub fn events_subscribe(&mut self, listener: Box<dyn UsbmuxdEventListener>)
+    pub fn events_subscribe(&mut self, listener: Box<dyn UsbmuxdEventListener + Send + 'static>)
     {
         self.listeners.lock().unwrap().push(listener);
 
@@ -170,15 +170,18 @@ impl UsbmuxdClient {
     }
 
     /// Subscribe a callback function to be called upon device add/remove events.
-    pub fn events_unsubscribe(&mut self, listener: Box<dyn UsbmuxdEventListener>) 
+    pub fn events_unsubscribe(&mut self, listener: Box<dyn UsbmuxdEventListener + Send + 'static>) 
     {
-        /*
-        let listeners : &Vec<Box<dyn UsbmuxdEventListener>> = &*self.listeners.lock().unwrap();
+        let listeners = self.listeners.lock().unwrap();
+
+        /* TODO
         let index = listeners.iter().position(|item| { 
-            return **item == listener;
+            return *item == listener;
         }).unwrap();
         listeners.remove(index);
         */
+
+        // TODO: maybe stop worker thread
     }
 }
 
